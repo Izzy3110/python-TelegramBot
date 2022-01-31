@@ -1,37 +1,25 @@
 import asyncio
-from telethon import TelegramClient, events
+import os
 
-import configparser
+import socks
 import json
 import re
-from telethon.errors import SessionPasswordNeededError
-from telethon import TelegramClient, events, sync
-from telethon.tl.functions.messages import (GetHistoryRequest)
-from telethon.tl.types import (
-    PeerChannel
-)
+from telethon import TelegramClient, events
 
-api_id = "11616477"
-api_hash = "770f84399a0379b2c25080dd1b9dd175"
+api_id = os.environ["API_ID"]
+api_hash = os.environ["API_HASH"]
 
 # Here you define the target channel that you want to listen to:
 user_input_channel = 'https://t.me/wyl22dev'
+
 subjectFilter = ['physics', 'mathematics', 'maths', 'math']
 levelFilter = ['sec', 'secondary', 'junior college', 'jc']
+proxy = (socks.SOCKS5, "127.0.0.1", "3128")
 
 
 async def main(api_id="11616477", api_hash="770f84399a0379b2c25080dd1b9dd175"):
-    async with TelegramClient('name', api_id, api_hash) as client:
-        me = await client.get_me()
-        print(me.stringify())
-
-        async for message in client.iter_messages('me'):
-            print(message.id, message.text)
-
-        await client.send_message('me', 'Hello, myself!')
-
-        # print(await client.download_profile_photo('me'))
-
+    async with TelegramClient('name', api_id, api_hash, proxy=proxy) as client:
+        
         @client.on(events.NewMessage(chats=user_input_channel))
         async def newMessageListener(event):
             newMessage = event.message.message
@@ -46,7 +34,8 @@ async def main(api_id="11616477", api_hash="770f84399a0379b2c25080dd1b9dd175"):
                 with open("users.json") as users_f:
                     users = json.loads(users_f.read())
                     for user in users:
-                        await client.forward_messages(entity=user["id"], messages=event.message)
+                        print("id: "+str(user["id"]))
+                    await client.forward_messages(entity="@wyl2022_bot", messages=event.message)
 
         @client.on(events.NewMessage(pattern='(?i).*Hello'))
         async def handler(event):
